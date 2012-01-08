@@ -1,0 +1,60 @@
+
+
+Project Name:		TwitterLight
+Project Purpose:	Education, Distributed Software Development Course 
+Project Supervisor: 	Sami Rollings, USF Professor 
+Participants:		Ali Alnajjar USF MS Web Science Student
+Contact:		najjaray@gmail.com
+Requirement URL:	https://sites.google.com/site/usfcs682f10/assignments/proje
+====================================================================================
+
+The goal of this project is to implement a distributed, fault tolerant data storage system for your Twitter application.  There are two main requirements of your implementation:
+In a system with N data storage servers, you will tolerate the failure of up to N-1 nodes.  As long as one data storage server is available, a client request will succeed.
+A client will not receive stale data if fresher data is available.  If, for example, a client POSTs new data and then performs a GET, the response the client receives must include the most recent POST unless all data storage servers storing the newest data have failed.
+You have three design/implementation options:
+Passive Replication
+
+You may implement a basic passive replication scheme.  A passive replication scheme favors consistency over availability; it tolerates faults as required, but may lead to slow response times, especially for POST requests.
+
+In the passive replication scheme, one data server will act as a primary and the others will act as secondaries.  Every POST request is propagated to the primary server from one of the front-end web servers.  The primary server will replicate the new data on all secondary servers and then respond to the front-end.  The front-end will then respond to the client.
+
+You will implement a mechanism for determining whether/when the primary replica has failed.  Sending HELO messages among the replicas at a regular interval is the recommended approach.  If the primary replica fails, you must do all of the following:
+Elect a new primary from the remaining secondary replicas.  For full credit, you must implement a distributed election algorithm such as the bully algorithm.
+Resolve any inconsistencies.  If the primary was in the process of processing a POST when it failed, you must either ensure that the new data is replicated on all secondaries or remove the update from the secondaries that had received it.
+Inform the front-ends of the IP address of the new replica.  
+Other Details
+
+Your implementation must allow new front-ends and data storage servers to be added at any time.  New front-end and back-end servers will be configured with the IP address of the current primary, but this is the only pre-configured information you may assume.  You must implement a procedure for both front-ends and back-ends to contact the primary so that the primary may replicate this membership information to the secondaries.  You may assume that the primary will not fail during this start-up procedure (or, if it does, an administrator will restart the process on the new node).
+
+You may allow front-ends to perform GET requests on secondary servers.  This may decrease response time.
+Lazy Replication
+
+You may implement a lazy replication scheme.  A lazy replication scheme provides greater availability and increased responsiveness, but at the cost of consistency.
+
+In the lazy replication scheme, front-ends may contact any back-end data server, at any time, for any type of request.  For a POST, a back-end may respond to the front-end before the data has been replicated.  Along with the response, the back-end will provide its most recent vector timestamp.  The front-end will use this to ensure that it receives the freshest data possible when performing a GET. 
+
+In the background, data servers will propagate updates to all other data servers.  When a front-end sends a GET request to a back-end, it will provide the most recent timestamp it has seen.  A back-end will not respond until its timestamp is equal to or greater than the timestamp provided, unless the only back-end server containing the data with such a timestamp has failed.
+
+Timestamps will also be used by the back-ends to provide partial ordering of the data.  Data returned by the back-end will be ordered by vector timestamp, which means that POSTs that were initially handled by the same back-end will be in chronological order.
+
+Your implementation must allow new front-ends and data storage servers to be added at any time.  A new node will be configured with the IP address of one of the back-end data servers.  You will implement a procedure for propagating information about new nodes to all other nodes in the system.
+
+You may implement your own procedure for determining which back-end is contacted by a given front-end for a given request, but your approach must meet two requirements: (1) as long as one back-end is available any front-end should be able to successfully complete a request and (2) load must be balanced among the back-ends.
+Design Your Own
+
+You may design your own approach provided you meet the following requirements:
+You schedule an in-person meeting to discuss your design with the professor.  During this meeting, you will be informed of maximum possible grade you may receive given the level of difficulty of your approach.
+You provide a (short) written description of your approach.
+Your approach incorporates one or more of the algorithms discussed in class (e.g., causal ordering using vector clocks, mutual exclusion, or election).
+Submission Instructions
+All code and instructions for running must be submitted in a jar file project2.jar.  This file must be placed in your svn repository /cs682/project2.
+All students must sign up for a demonstration.  A sign-up sheet will be made available closer to the deadline.  During your demonstration, you will be asked to do the following:
+Run at least two instances of your web server on two different machines.
+Run at least two instances of your data server on two different machines.
+Launch of all components must be demonstrated for full credit.
+Demonstrate test cases that show your code works correctly. 
+Replication happens correctly and strong or eventual consistency is provided.
+Your system recovers when any component fails.
+New components (front ends or back ends) can be added dynamically.
+Provide an overview of your code design.
+Show specific elements of your code and be prepared to answer questions about any portion of your code.
